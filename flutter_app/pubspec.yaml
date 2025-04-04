@@ -1,0 +1,31 @@
+name: learning_app
+description: Bristol Jiu Jitsu - A learning app with video lessons.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.19.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  table_calendar: ^3.0.9
+  video_player: ^2.6.1
+  intl: ^0.18.1
+  http: ^0.13.6
+  provider: ^6.0.5
+  shared_preferences: ^2.2.0
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

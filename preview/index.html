@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bristol BJJ Academy</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-auth-compat.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #cc0000;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-container {
+      text-align: center;
+    }
+    
+    .loading-text {
+      color: #333;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-container">
+    <div class="loader"></div>
+    <div class="loading-text">Loading...</div>
+  </div>
+  
+  <script>
+    // Fetch Firebase configuration from server
+    function initializeFirebase() {
+      return fetch('/firebase-config')
+        .then(response => response.json())
+        .then(firebaseConfig => {
+          // Initialize Firebase
+          firebase.initializeApp(firebaseConfig);
+          return firebase;
+        })
+        .catch(error => {
+          console.error("Error initializing Firebase:", error);
+        });
+    }
+    
+    // Check authentication state and redirect
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeFirebase()
+        .then(firebase => {
+          // Handle auth state
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              // User is signed in, redirect to home
+              window.location.href = 'home.html';
+            } else {
+              // No user is signed in, redirect to login
+              window.location.href = 'login.html';
+            }
+          });
+        })
+        .catch(error => {
+          // If there's any error, redirect to login
+          console.error("Authentication error:", error);
+          window.location.href = 'login.html';
+        });
+    });
+  </script>
+</body>
+</html>

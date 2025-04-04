@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Bristol Jiu Jitsu Academy</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore-compat.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    .logo-container {
+      background-color: #000;
+      padding: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo {
+      max-width: 250px;
+      height: auto;
+    }
+    
+    .signup-container {
+      width: 90%;
+      max-width: 400px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    
+    h2 {
+      color: #cc0000;
+      margin-top: 0;
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    
+    button {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 12px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+      width: 100%;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    
+    button:hover {
+      background-color: #aa0000;
+    }
+    
+    .social-login {
+      margin-top: 20px;
+      text-align: center;
+    }
+    
+    .google-btn {
+      background-color: white;
+      color: #666;
+      border: 1px solid #ddd;
+      padding: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .google-btn:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .google-icon {
+      margin-right: 10px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .separator {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+      color: #666;
+    }
+    
+    .separator::before,
+    .separator::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .separator::before {
+      margin-right: 10px;
+    }
+    
+    .separator::after {
+      margin-left: 10px;
+    }
+    
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    a {
+      color: #cc0000;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    .error-message {
+      color: #cc0000;
+      background-color: #ffeded;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <!-- Logo Image -->
+    <img src="logo.png" alt="Bristol Jiu Jitsu" class="logo">
+  </div>
+  
+  <div class="signup-container">
+    <h2>Create Account</h2>
+    
+    <div id="error-message" class="error-message"></div>
+    
+    <div class="form-group">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" placeholder="Your full name">
+    </div>
+    
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Your email address">
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Create a password">
+      <div class="help-text">Password should be at least 6 characters</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="belt-level">Current Belt Level</label>
+      <select id="belt-level">
+        <option value="white">White Belt</option>
+        <option value="blue">Blue Belt</option>
+        <option value="purple">Purple Belt</option>
+        <option value="brown">Brown Belt</option>
+        <option value="black">Black Belt</option>
+      </select>
+    </div>
+    
+    <button id="signup-btn">Create Account</button>
+    
+    <div class="separator">OR</div>
+    
+    <div class="social-login">
+      <button id="google-signup-btn" class="google-btn">
+        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+          <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+        </svg>
+        Sign up with Google
+      </button>
+    </div>
+    
+    <div class="login-link">
+      Already have an account? <a href="login.html">Login</a>
+    </div>
+  </div>
+  
+  <script>
+    // Fetch Firebase configuration from server
+    function initializeFirebase() {
+      return fetch('/firebase-config')
+        .then(response => response.json())
+        .then(firebaseConfig => {
+          // Initialize Firebase
+          firebase.initializeApp(firebaseConfig);
+          return firebase;
+        })
+        .catch(error => {
+          console.error("Error initializing Firebase:", error);
+          showError("Could not initialize app. Please try again later.");
+        });
+    }
+    
+    // Show error message
+    function showError(message) {
+      const errorElement = document.getElementById('error-message');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+    
+    // Creates a user profile in Firestore
+    function createUserProfile(uid, name, email, beltLevel) {
+      const db = firebase.firestore();
+      
+      return db.collection('users').doc(uid).set({
+        name: name,
+        email: email,
+        beltLevel: beltLevel,
+        videosWatched: 0,
+        hoursWatched: 0,
+        streak: 0,
+        joinDate: new Date(),
+        favoriteVideos: [],
+        watchedVideos: []
+      });
+    }
+    
+    // Check if user is already logged in
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeFirebase()
+        .then(firebase => {
+          // Handle the redirect result first
+          firebase.auth().getRedirectResult()
+            .then(result => {
+              if (result.user) {
+                console.log('User signed in after redirect', result.user);
+                
+                // Check if we stored belt level for this user
+                const beltLevel = localStorage.getItem('selectedBeltLevel');
+                
+                if (result.additionalUserInfo.isNewUser && beltLevel) {
+                  // Create user profile in Firestore for new users
+                  return createUserProfile(result.user.uid, result.user.displayName, result.user.email, beltLevel)
+                    .then(() => {
+                      // Clear localStorage
+                      localStorage.removeItem('selectedBeltLevel');
+                      // Redirect to home
+                      window.location.href = '/';
+                    });
+                } else {
+                  // Existing user, redirect to home
+                  window.location.href = '/';
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Redirect error:', error);
+              showError('Authentication failed. Please try again.');
+            });
+            
+          // Then check if user is already signed in
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              console.log('User already signed in', user);
+              // User is signed in, redirect to home
+              window.location.href = '/';
+            }
+          });
+          
+          // Set up signup button
+          const signupBtn = document.getElementById('signup-btn');
+          signupBtn.addEventListener('click', () => {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const beltLevel = document.getElementById('belt-level').value;
+            
+            if (!name || !email || !password) {
+              showError('Please fill in all required fields');
+              return;
+            }
+            
+            if (password.length < 6) {
+              showError('Password should be at least 6 characters');
+              return;
+            }
+            
+            // Create user with email and password
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+              .then(userCredential => {
+                // Update user profile with display name
+                return userCredential.user.updateProfile({
+                  displayName: name
+                }).then(() => {
+                  // Create user profile in Firestore
+                  return createUserProfile(userCredential.user.uid, name, email, beltLevel);
+                }).then(() => {
+                  // Redirect to home page
+                  window.location.href = '/';
+                });
+              })
+              .catch(error => {
+                // Handle errors
+                let errorMessage = 'Registration failed. Please try again.';
+                if (error.code === 'auth/email-already-in-use') {
+                  errorMessage = 'Email address is already in use';
+                } else if (error.code === 'auth/invalid-email') {
+                  errorMessage = 'Invalid email format';
+                } else if (error.code === 'auth/weak-password') {
+                  errorMessage = 'Password is too weak';
+                }
+                showError(errorMessage);
+              });
+          });
+          
+          // Set up Google signup button
+          const googleSignupBtn = document.getElementById('google-signup-btn');
+          googleSignupBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const beltLevel = document.getElementById('belt-level').value;
+            
+            // Store belt level in localStorage before redirect
+            localStorage.setItem('selectedBeltLevel', beltLevel);
+            
+            // Use redirect instead of popup for better compatibility with Replit
+            firebase.auth().signInWithRedirect(provider)
+              .catch(error => {
+                // Handle errors
+                showError('Google sign-up failed. Please try again.');
+                console.error('Google sign-up error:', error);
+              });
+          });
+        });
+    });
+  </script>
+</body>
+</html>

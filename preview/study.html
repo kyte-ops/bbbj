@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bristol BJJ Academy - Training</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      color: #222;
+      padding-bottom: 80px; /* Space for fixed bottom navigation */
+    }
+
+    .header {
+      background-color: #000;
+      padding: 15px 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        padding: 10px 0;
+      }
+
+      .logo {
+        max-width: 120px;
+      }
+
+      .user-name {
+        display: none;
+      }
+
+      .logout-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+
+    .logo-container {
+      flex: 1;
+      text-align: center;
+    }
+
+    .logo {
+      max-width: 150px;
+      height: auto;
+    }
+
+    .user-controls {
+      padding-right: 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+    }
+
+    .user-name {
+      margin-right: 15px;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #cc0000;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+    }
+
+    .content-area {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    /* Calendar styles */
+    .calendar-container {
+      padding: 10px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .custom-calendar {
+      width: 100%;
+      border-collapse: collapse;
+      overflow-x: auto;
+      table-layout: fixed;
+    }
+
+    .custom-calendar th {
+      background-color: #f8f8f8;
+      color: #222;
+      padding: 8px 3px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .custom-calendar td {
+      width: 14.28%; /* 100% / 7 days */
+      padding: 2px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .custom-calendar .day {
+      height: 30px;
+      width: 30px;
+      line-height: 30px;
+      display: inline-block;
+      border-radius: 50%;
+      transition: all 0.3s;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 480px) {
+      .custom-calendar th {
+        padding: 5px 2px;
+        font-size: 12px;
+      }
+
+      .custom-calendar td {
+        padding: 1px;
+      }
+
+      .custom-calendar .day {
+        height: 25px;
+        width: 25px;
+        line-height: 25px;
+        font-size: 12px;
+      }
+    }
+
+    .custom-calendar .day:hover {
+      background-color: #f0f0f0;
+    }
+
+    .custom-calendar .day.today {
+      background-color: #cc0000;
+      color: white;
+      font-weight: bold;
+    }
+
+    .custom-calendar .day.has-video {
+      position: relative;
+    }
+
+    .custom-calendar .day.has-video::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background-color: #cc0000;
+      border-radius: 50%;
+    }
+
+    .custom-calendar .day.selected {
+      background-color: #000;
+      color: white;
+    }
+
+    .month-control {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .month-name {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .month-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #222;
+      padding: 5px 10px;
+    }
+
+    .month-btn:hover {
+      background-color: #f0f0f0;
+      border-radius: 4px;
+    }
+
+    /* Videos section */
+    .videos-section {
+      margin-top: 30px;
+    }
+
+    .videos-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .selected-date {
+      font-size: 20px;
+      font-weight: bold;
+      color: #cc0000;
+      margin-bottom: 10px;
+    }
+
+    .videos-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .selected-date {
+        font-size: 18px;
+        width: 100%;
+      }
+
+      .videos-list {
+        grid-template-columns: 1fr;
+      }
+
+      .videos-title {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .video-card {
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .video-thumbnail {
+      width: 100%;
+      height: 180px;
+      background-color: #000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .play-icon {
+      position: absolute;
+      background-color: rgba(204, 0, 0, 0.8);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .video-info {
+      padding: 15px;
+    }
+
+    .video-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .video-description {
+      color: #666;
+      font-size: 14px;
+      height: 40px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .video-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .video-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+    }
+
+    .video-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      color: #666;
+      transition: color 0.2s;
+    }
+
+    .video-action-btn:hover {
+      color: #cc0000;
+    }
+
+    .video-action-btn span {
+      margin-right: 5px;
+    }
+
+    .video-action-btn.completed {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .video-action-btn.favorited {
+      background-color: #fce4ec;
+      color: #c2185b;
+    }
+
+    .difficulty-tag {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    .completed-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #4caf50;
+      color: white;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .upload-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+    }
+
+    .upload-btn:hover {
+      background-color: #aa0000;
+    }
+
+    .bottom-tabs {
+      display: flex;
+      background-color: rgba(34, 34, 34, 0.95);
+      overflow: hidden;
+      margin-bottom: 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      padding: 8px 0;
+    }
+
+    .bottom-tab {
+      flex: 1;
+      padding: 12px 0;
+      margin: 0 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+      border-radius: 15px;
+    }
+
+    .bottom-tab:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-icon {
+      display: block;
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    .bottom-tab.active {
+      background-color: #cc0000;
+      box-shadow: 0 4px 10px rgba(204, 0, 0, 0.4);
+    }
+
+    .no-videos-message {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Video player modal */
+    .video-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .video-player-container {
+      width: 90%;
+      max-width: 800px;
+      position: relative;
+    }
+
+    .video-player {
+      width: 100%;
+      height: 450px;
+      border: none;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 480px) {
+      .video-player {
+        height: 240px;
+      }
+    }
+
+    .close-modal {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: white;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .video-player-title {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 20px;
+      max-width: 800px;
+      text-align: center;
+    }
+
+    /* Upload Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1001;
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 30px;
+      width: 90%;
+      max-width: 700px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .close-modal-btn {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+    }
+
+    .upload-note {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .primary-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .secondary-btn {
+      background-color: #f0f0f0;
+      color: #444;
+      border: 1px solid #ddd;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .upload-items {
+      margin: 20px 0;
+    }
+
+    .upload-item {
+      background-color: #f8f8f8;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border: 1px solid #eee;
+    }
+
+    .upload-item-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .upload-progress {
+      height: 6px;
+      background-color: #eee;
+      border-radius: 3px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .upload-progress-bar {
+      height: 100%;
+      background-color: #cc0000;
+      width: 0;
+      transition: width 0.3s;
+    }
+
+    @media (max-width: 480px) {
+      .modal-content {
+        width: 95%;
+        padding: 20px 15px;
+        margin: 10% auto;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .secondary-btn {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <!-- Logo Image -->
+      <img src="logo.png" alt="Bristol Jiu Jitsu" class="logo">
+    </div>
+
+    <div class="user-controls">
+      <div id="user-name" class="user-name"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="authenticated-content">
+      <h1>BJJ Training Videos</h1>
+
+      <div class="content-area">
+        <div class="videos-section">
+          <div class="videos-title">
+            <div class="selected-date" id="selected-date">Available Videos for April 3, 2025</div>
+            <div id="instructor-controls" style="display: none;">
+              <button id="upload-btn" class="upload-btn">Upload New Video</button>
+            </div>
+          </div>
+
+          <div id="videos-container" class="videos-list">
+            <!-- Video cards will appear here -->
+            <div class="no-videos-message" id="no-videos-message" style="display: none;">
+              No videos available for this date. Please select another day.
+            </div>
+          </div>
+        </div>
+
+        <div class="calendar-container">
+          <div class="month-control">
+            <button id="prev-month" class="month-btn">←</button>
+            <div id="month-name" class="month-name">April 2025</div>
+            <button id="next-month" class="month-btn">→</button>
+          </div>
+
+          <table class="custom-calendar">
+            <thead>
+              <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+              </tr>
+            </thead>
+            <tbody id="calendar-body">
+              <!-- Calendar days will be inserted here -->
+            </tbody>
+          </table>
+          <script>
+            function generateCalendarDays(month, year) {
+              const calendarBody = document.getElementById('calendar-body');
+              calendarBody.innerHTML = '';
+
+              const firstDay = new Date(year, month, 1).getDay();
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              const today = new Date();
+              const currentDate = today.getDate();
+              const currentMonth = today.getMonth();
+              const currentYear = today.getFullYear();
+
+              let date = 1;
+              for (let i = 0; i < 6; i++) {
+                if (date > daysInMonth) break;
+
+                const row = document.createElement('tr');
+
+                for (let j = 0; j < 7; j++) {
+                  const cell = document.createElement('td');
+
+                  if (i === 0 && j < firstDay) {
+                    cell.textContent = '';
+                  } else if (date > daysInMonth) {
+                    cell.textContent = '';
+                  } else {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.textContent = date;
+                    dayDiv.classList.add('day');
+
+                    if (date === currentDate && month === currentMonth && year === currentYear) {
+                      dayDiv.classList.add('today');
+                    }
+
+                    const cellDate = new Date(year, month, date);
+                    const isDateInFuture = cellDate > today;
+
+                    if (isDateInFuture) {
+                      // Make future dates non-clickable and gray
+                      dayDiv.style.cursor = 'default';
+                      dayDiv.style.color = '#aaa';
+                    } else {
+                      // Make past and present dates clickable
+                      dayDiv.style.cursor = 'pointer';
+                      dayDiv.addEventListener('click', () => {
+                        document.querySelectorAll('.day').forEach(d => d.classList.remove('selected'));
+                        dayDiv.classList.add('selected');
+                        loadVideosForDate(cellDate);
+                      });
+                    }
+
+                    // Check for specific dates that have videos
+                    const specificDates = [1, 3, 5, 7, 9, 15];
+                    if (specificDates.includes(date)) {
+                      dayDiv.classList.add('has-video');
+                    }
+
+                    cell.appendChild(dayDiv);
+                    date++;
+                  }
+
+                  row.appendChild(cell);
+                }
+
+                calendarBody.appendChild(row);
+              }
+            }
+
+            // Initialize with current month
+            const now = new Date();
+            generateCalendarDays(now.getMonth(), now.getFullYear());
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video player modal -->
+  <div id="video-modal" class="video-modal">
+    <div class="video-player-title" id="modal-video-title"></div>
+    <div class="video-player-container">
+      <button id="close-modal" class="close-modal">×</button>
+      <iframe id="video-player" class="video-player" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Video upload modal -->
+  <div id="upload-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal-btn" id="close-upload-modal">&times;</span>
+      <h2>Upload New Training Videos</h2>
+
+      <form id="upload-form">
+        <div class="form-group">
+          <label for="video-title">Video Title:</label>
+          <input type="text" id="video-title" required placeholder="e.g., Advanced Guard Passing Techniques">
+        </div>
+
+        <div class="form-group">
+          <label for="video-description">Description:</label>
+          <textarea id="video-description" rows="3" required placeholder="Briefly describe the techniques covered in this video"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="video-duration">Duration (minutes:seconds):</label>
+          <input type="text" id="video-duration" required placeholder="e.g., 12:45" pattern="[0-9]+:[0-5][0-9]">
+        </div>
+
+        <div class="form-group">
+          <label for="video-date">Date:</label>
+          <input type="date" id="video-date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="video-upload">Upload Video Files (multiple files allowed):</label>
+          <input type="file" id="video-upload" multiple accept="video/*">
+          <div class="upload-note">Supported formats: MP4, MOV, AVI, WebM (max 500MB)</div>
+        </div>
+
+        <div class="upload-items" id="upload-items">
+          <!-- Upload items will be added dynamically -->
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="add-more-btn" class="secondary-btn">Add Another Video</button>
+          <button type="submit" class="primary-btn">Upload Videos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="bottom-tabs">
+    <div class="bottom-tab" data-page="home.html">
+      <span class="tab-icon">🏠</span>
+      Home
+    </div>
+    <div class="bottom-tab active" data-page="study.html">
+      <span class="tab-icon">🥋</span>
+      Train
+    </div>
+    <div class="bottom-tab" data-page="profile.html">
+      <span class="tab-icon">👤</span>
+      Profile
+    </div>
+  </div>
+
+  <script>
+    // Fetch Firebase configuration from server
+    function initializeFirebase() {
+      return fetch('/firebase-config')
+        .then(response => response.json())
+        .then(firebaseConfig => {
+          // Initialize Firebase
+          firebase.initializeApp(firebaseConfig);
+          return firebase;
+        })
+        .catch(error => {
+          console.error("Error initializing Firebase:", error);
+        });
+    }
+
+    // Check if user is already logged in
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeFirebase()
+        .then(firebase => {
+          // Check authentication state
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              // User is signed in
+              console.log('User signed in:', user);
+
+              // Display user name
+              const userNameElement = document.getElementById('user-name');
+              userNameElement.textContent = user.displayName || user.email;
+
+              // Set up logout functionality
+              const logoutBtn = document.getElementById('logout-btn');
+              logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                  // Sign-out successful, redirect to login
+                  window.location.href = 'login.html';
+                }).catch(error => {
+                  console.error('Logout error:', error);
+                });
+              });
+
+              // Check if user is an instructor
+              checkInstructorRole(user.uid);
+
+              // Initialize calendar and videos
+              initializeCalendar();
+              loadVideosForDate(new Date());
+            } else {
+              // No user is signed in, redirect to login
+              window.location.href = 'login.html';
+            }
+          });
+
+          // Set up bottom navigation
+          const tabs = document.querySelectorAll('.bottom-tab');
+          tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+              const page = tab.getAttribute('data-page');
+              if (page) {
+                window.location.href = page;
+              }
+            });
+          });
+        });
+    });
+
+    // Calendar functionality
+    function initializeCalendar() {
+      const now = new Date();
+      let currentMonth = now.getMonth();
+      let currentYear = now.getFullYear();
+
+      // Set month name
+      updateMonthName(currentMonth, currentYear);
+
+      // Generate calendar days
+      generateCalendarDays(currentMonth, currentYear);
+
+      // Set up month navigation
+      document.getElementById('prev-month').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        updateMonthName(currentMonth, currentYear);
+        generateCalendarDays(currentMonth, currentYear);
+      });
+
+      document.getElementById('next-month').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        updateMonthName(currentMonth, currentYear);
+        generateCalendarDays(currentMonth, currentYear);
+      });
+
+      // Initialize with today's date selected and load videos
+      const today = new Date();
+
+      // Mark today as selected by default and load its videos
+      setTimeout(() => {
+        const todayElement = document.querySelector('.day.today');
+        if (todayElement) {
+          todayElement.classList.add('selected');
+          // Load videos for today
+          loadVideosForDate(today);
+        }
+      }, 100);
+    }
+
+    function updateMonthName(month, year) {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      document.getElementById('month-name').textContent = `${monthNames[month]} ${year}`;
+    }
+
+    function generateCalendarDays(month, year) {
+              const calendarBody = document.getElementById('calendar-body');
+              calendarBody.innerHTML = '';
+
+              const firstDay = new Date(year, month, 1).getDay();
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              const today = new Date();
+              const currentDate = today.getDate();
+              const currentMonth = today.getMonth();
+              const currentYear = today.getFullYear();
+
+              let date = 1;
+              for (let i = 0; i < 6; i++) {
+                if (date > daysInMonth) break;
+
+                const row = document.createElement('tr');
+
+                for (let j = 0; j < 7; j++) {
+                  const cell = document.createElement('td');
+
+                  if (i === 0 && j < firstDay) {
+                    cell.textContent = '';
+                  } else if (date > daysInMonth) {
+                    cell.textContent = '';
+                  } else {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.textContent = date;
+                    dayDiv.classList.add('day');
+
+                    if (date === currentDate && month === currentMonth && year === currentYear) {
+                      dayDiv.classList.add('today');
+                    }
+
+                    const cellDate = new Date(year, month, date);
+                    const isDateInFuture = cellDate > today;
+
+                    if (isDateInFuture) {
+                      // Make future dates non-clickable and gray
+                      dayDiv.style.cursor = 'default';
+                      dayDiv.style.color = '#aaa';
+                    } else {
+                      // Make past and present dates clickable
+                      dayDiv.style.cursor = 'pointer';
+                      dayDiv.addEventListener('click', () => {
+                        document.querySelectorAll('.day').forEach(d => d.classList.remove('selected'));
+                        dayDiv.classList.add('selected');
+                        loadVideosForDate(cellDate);
+                      });
+                    }
+
+                    // Check for specific dates that have videos
+                    const specificDates = [1, 3, 5, 7, 9, 15];
+                    if (specificDates.includes(date)) {
+                      dayDiv.classList.add('has-video');
+                    }
+
+                    cell.appendChild(dayDiv);
+                    date++;
+                  }
+
+                  row.appendChild(cell);
+                }
+
+                calendarBody.appendChild(row);
+              }
+            }
+
+    // Store favorited videos
+    let favoritedVideos = [];
+    let completedVideos = [];
+
+    // Make these variables accessible to other pages (like profile.html)
+    window.favoritedVideos = favoritedVideos;
+    window.completedVideos = completedVideos;
+
+    // Load videos for a specific date
+    function loadVideosForDate(date) {
+      const videosContainer = document.getElementById('videos-container');
+      const noVideosMessage = document.getElementById('no-videos-message');
+
+      // Clear previous videos - completely emptying the container except for the no-videos message
+      // First hide the no-videos message
+      noVideosMessage.style.display = 'none';
+
+      // Removeall video cards
+      const videoCards = videosContainer.querySelectorAll('.video-card');
+      videoCards.forEach(card => {
+        videosContainer.removeChild(card);
+      });
+
+      // Check if the selected date is today
+      const today = new Date();
+      const isToday = (
+        date.getDate() === today.getDate() && 
+        date.getMonth() === today.getMonth() && 
+        date.getFullYear() === today.getFullYear()
+      );
+
+      // Format the date header text
+      let dateHeader;
+      if (isToday) {
+        dateHeader = "Today's Training Videos";
+      } else {
+        // Format the date in a more readable way
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const month = monthNames[date.getMonth()];
+        const day = date.getDate();
+        const year = date.getFullYear();
+
+        // Add the correct suffix to the day
+        let daySuffix = 'th';
+        if (day === 1 || day === 21 || day === 31) {
+          daySuffix = 'st';
+        } else if (day === 2 || day === 22) {
+          daySuffix = 'nd';
+        } else if (day === 3 || day === 23) {
+          daySuffix = 'rd';
+        }
+
+        // Show the selected date
+        dateHeader = `${month} ${day} Training Videos`;
+      }
+
+      // Update the header
+      const dateHeaderEl = document.getElementById('selected-date');
+      if (dateHeaderEl) {
+        dateHeaderEl.textContent = dateHeader;
+      }
+
+      // Check if this date is in the past or today (not future)
+      const isDateInPastOrToday = date <= new Date();
+
+      // For demo purposes, always show videos on specific dates
+      // 1st, 3rd, 5th, 7th, 9th, 15th of each month
+      const specificDates = [1, 3, 5, 7, 9, 15];
+      const hasVideos = specificDates.includes(date.getDate());
+
+      const dateString = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+      if (hasVideos) {
+        noVideosMessage.style.display = 'none';
+
+        // Define specific videos for certain dates (demo data)
+        const videoData = {
+          // Fixed videos for specific dates
+          '04/01/2025': [
+            { id: 'v1', title: 'Fundamental Guard Passes', description: 'Learn the most essential guard passing techniques every white belt should know', duration: '14:30', instructor: 'John Doe', difficulty: 'Beginner' },
+            { id: 'v2', title: 'Triangle Choke Setups', description: 'Three effective ways to set up the triangle choke from guard', duration: '11:20', instructor: 'Sarah Smith', difficulty: 'Intermediate' }
+          ],
+          '04/03/2025': [
+            { id: 'v3', title: 'Advanced De La Riva Guard', description: 'How to control and sweep from the De La Riva guard position', duration: '18:45', instructor: 'Mike Johnson', difficulty: 'Advanced' },
+            { id: 'v4', title: 'Competition Training Drills', description: 'High-intensity training drills to prepare for tournament conditions', duration: '22:15', instructor: 'Emily White', difficulty: 'All Levels' },
+            { id: 'v5', title: 'Escaping Side Control', description: 'Practical techniques to escape from side control against a larger opponent', duration: '15:30', instructor: 'John Doe', difficulty: 'Intermediate' }
+          ],
+          '04/05/2025': [
+            { id: 'v6', title: 'Takedown Fundamentals', description: 'Basic takedown techniques effective for BJJ competitions', duration: '20:10', instructor: 'Sarah Smith', difficulty: 'Beginner' },
+            { id: 'v7', title: 'Kimura from Closed Guard', description: 'Multiple setups for the kimura submission from closed guard', duration: '13:25', instructor: 'Mike Johnson', difficulty: 'Intermediate' }
+          ],
+          '04/07/2025': [
+            { id: 'v8', title: 'Pressure Passing Concepts', description: 'Understanding and applying pressure in your guard passing game', duration: '19:40', instructor: 'Emily White', difficulty: 'Advanced' },
+            { id: 'v9', title: 'Half Guard Sweeps', description: 'Essential sweeps from the half guard position', duration: '16:55', instructor: 'John Doe', difficulty: 'Intermediate' }
+          ],
+          '04/09/2025': [
+            { id: 'v10', title: 'Berimbolo Technique', description: 'Detailed breakdown of the berimbolo technique and its variations', duration: '24:30', instructor: 'Sarah Smith', difficulty: 'Advanced' }
+          ],
+          '04/15/2025': [
+            { id: 'v11', title: 'Self-Defense Basics', description: 'Practical self-defense applications of BJJ techniques', duration: '17:15', instructor: 'Mike Johnson', difficulty: 'Beginner' },
+            { id: 'v12', title: 'Open Guard Retention', description: 'How to maintain your open guard against aggressive passers', duration: '15:50', instructor: 'Emily White', difficulty: 'Intermediate' }
+          ]
+        };
+
+        // Get videos for this date only - no fallback to ensure we only show date-specific videos
+        const videosForDate = videoData[dateString] || [];
+
+        // Log the date string to debug
+        console.log('Loading videos for date:', dateString);
+        console.log('Found videos:', videosForDate.length);
+
+        // Create video cards for each video
+        videosForDate.forEach((video, index) => {
+          // Create video card
+          const videoCard = document.createElement('div');
+          videoCard.classList.add('video-card');
+          videoCard.dataset.videoId = video.id;
+
+          // Create video thumbnail
+          const thumbnail = document.createElement('div');
+          thumbnail.classList.add('video-thumbnail');
+
+          // Background color based on difficulty level
+          const bgColors = {
+            'Beginner': '#1a3d5c',
+            'Intermediate': '#3a1a5c',
+            'Advanced': '#5c1a1a',
+            'All Levels': '#1a5c3d'
+          };
+          thumbnail.style.backgroundColor = bgColors[video.difficulty] || '#2a2a2a';
+
+          // Difficulty level tag
+          const difficultyTag = document.createElement('div');
+          difficultyTag.classList.add('difficulty-tag');
+          difficultyTag.textContent = video.difficulty;
+          thumbnail.appendChild(difficultyTag);
+
+          // Play icon
+          const playIcon = document.createElement('div');
+          playIcon.classList.add('play-icon');
+          playIcon.innerHTML = '▶';
+          thumbnail.appendChild(playIcon);
+
+          // Check if video is completed
+          if (completedVideos.includes(video.id)) {
+            const completedBadge = document.createElement('div');
+            completedBadge.classList.add('completed-badge');
+            completedBadge.innerHTML = '✓';
+            completedBadge.title = 'You have watched this video';
+            thumbnail.appendChild(completedBadge);
+          }
+
+          // Video info
+          const videoInfo = document.createElement('div');
+          videoInfo.classList.add('video-info');
+
+          const videoTitle = document.createElement('div');
+          videoTitle.classList.add('video-title');
+          videoTitle.textContent = video.title;
+
+          const videoDescription = document.createElement('div');
+          videoDescription.classList.add('video-description');
+          videoDescription.textContent = video.description;
+
+          const videoMeta = document.createElement('div');
+          videoMeta.classList.add('video-meta');
+          videoMeta.innerHTML = `<span>${video.duration}</span><span>Instructor: ${video.instructor}</span>`;
+
+          videoInfo.appendChild(videoTitle);
+          videoInfo.appendChild(videoDescription);
+          videoInfo.appendChild(videoMeta);
+
+          // Add video actions (complete and favorite)
+          const videoActions = document.createElement('div');
+          videoActions.classList.add('video-actions');
+
+          const completeBtn = document.createElement('button');
+          completeBtn.classList.add('video-action-btn');
+
+          if (completedVideos.includes(video.id)) {
+            completeBtn.innerHTML = '<span>✓</span> Completed';
+            completeBtn.classList.add('completed');
+          } else {
+            completeBtn.innerHTML = '<span>👁️</span> Mark Watched';
+          }
+
+          completeBtn.onclick = function(e) {
+            e.stopPropagation();
+            if (!completedVideos.includes(video.id)) {
+              completedVideos.push(video.id);
+              window.completedVideos = completedVideos; // Update global variable
+              completeBtn.innerHTML = '<span>✓</span> Completed';
+              completeBtn.classList.add('completed');
+
+              // Add completed badge to thumbnail
+              if (!thumbnail.querySelector('.completed-badge')) {
+                const completedBadge = document.createElement('div');
+                completedBadge.classList.add('completed-badge');
+                completedBadge.innerHTML = '✓';
+                completedBadge.title = 'You have watched this video';
+                thumbnail.appendChild(completedBadge);
+              }
+
+              // Update to Firestore in a real app
+              console.log('Marked as completed:', video.id);
+
+              // Update completed videos in profile
+              updateProfileStats();
+            }
+          };
+
+          const favoriteBtn = document.createElement('button');
+          favoriteBtn.classList.add('video-action-btn');
+
+          if (favoritedVideos.includes(video.id)) {
+            favoriteBtn.innerHTML = '<span>❤️</span> Favorited';
+            favoriteBtn.classList.add('favorited');
+          } else {
+            favoriteBtn.innerHTML = '<span>♡</span> Favorite';
+          }
+
+          favoriteBtn.onclick = function(e) {
+            e.stopPropagation();
+            if (favoritedVideos.includes(video.id)) {
+              // Remove from favorites
+              favoritedVideos = favoritedVideos.filter(id => id !== video.id);
+              window.favoritedVideos = favoritedVideos; // Update global variable
+              favoriteBtn.innerHTML = '<span>♡</span> Favorite';
+              favoriteBtn.classList.remove('favorited');
+
+              // Remove from Firestore
+              const user = firebase.auth().currentUser;
+              if (user) {
+                const db = firebase.firestore();
+                db.collection('users').doc(user.uid).update({
+                  favoritedVideos: firebase.firestore.FieldValue.arrayRemove(video.id)
+                });
+              }
+            } else {
+              // Add to favorites
+              favoritedVideos.push(video.id);
+              window.favoritedVideos = favoritedVideos; // Update global variable
+              favoriteBtn.innerHTML = '<span>❤️</span> Favorited';
+              favoriteBtn.classList.add('favorited');
+
+              // Store favorite in user's Firestore document
+              const user = firebase.auth().currentUser;
+              if (user) {
+                const db = firebase.firestore();
+                db.collection('users').doc(user.uid).update({
+                  favoritedVideos: firebase.firestore.FieldValue.arrayUnion(video.id)
+                });
+              }
+            }
+
+            // Update to Firestore in a real app
+            console.log('Favorites updated:', favoritedVideos);
+
+            // Update favorite videos in profile
+            updateProfileFavorites();
+          };
+
+          videoActions.appendChild(completeBtn);
+          videoActions.appendChild(favoriteBtn);
+
+          videoInfo.appendChild(videoActions);
+
+          videoCard.appendChild(thumbnail);
+          videoCard.appendChild(videoInfo);
+
+          // Set up click event to show video player
+          videoCard.addEventListener('click', () => {
+            // Mark as completed when viewed
+            if (!completedVideos.includes(video.id)) {
+              completedVideos.push(video.id);
+              window.completedVideos = completedVideos; // Update global variable
+              // Update UI for completion status
+              const completeButton = videoCard.querySelector('.video-action-btn:not(.favorited)');
+              if (completeButton) {
+                completeButton.innerHTML = '<span>✓</span> Completed';
+                completeButton.classList.add('completed');
+              }
+
+              // Add completed badge
+              if (!thumbnail.querySelector('.completed-badge')) {
+                const completedBadge = document.createElement('div');
+                completedBadge.classList.add('completed-badge');
+                completedBadge.innerHTML = '✓';
+                completedBadge.title = 'You have watched this video';
+                thumbnail.appendChild(completedBadge);
+              }
+
+              // Update profile stats
+              updateProfileStats();
+            }
+
+            openVideoPlayer(video.title, 'https://www.youtube.com/embed/QH5YuD8BIy0');
+          });
+
+          videosContainer.appendChild(videoCard);
+        });
+      } else {
+        noVideosMessage.style.display = 'block';
+      }
+    }
+
+    // Update profile stats
+    function updateProfileStats() {
+      // This would update the user's profile in a real app
+      // For this demo, we'll just update the completed videos count if on profile page
+      if (window.location.pathname.includes('profile.html')) {
+        const completedCount = document.getElementById('completed-count');
+        if (completedCount) {
+          completedCount.textContent = completedVideos.length;
+        }
+      }
+    }
+
+    // Update profile favorites
+    function updateProfileFavorites() {
+      // This would update the favorites list in the profile page
+      // For this demo, we'll call a separate function that would be implemented in profile.html
+      if (window.updateFavoritesInProfile && typeof window.updateFavoritesInProfile === 'function') {
+        window.updateFavoritesInProfile(favoritedVideos);
+      }
+    }
+
+    // Check if user is an instructor
+    function checkInstructorRole(uid) {
+      const db = firebase.firestore();
+      const currentUser = firebase.auth().currentUser;
+
+      if (!currentUser) {
+        console.error("No authenticated user found");
+        return;
+      }
+
+      // Sample instructor emails (in real app, this would be stored in Firestore)
+      const instructorEmails = [
+        'instructor@bristolbjj.com', 
+        'coach@bristolbjj.com', 
+        'sensei@bristolbjj.com', 
+        'instructor@example.com',
+        'nickkyte21@gmail.com'
+      ];
+
+      // Check if user's email indicates an instructor
+      const isInstructor = currentUser.email && (
+        instructorEmails.includes(currentUser.email) ||
+        currentUser.email.endsWith('@instructor.com') || 
+        currentUser.email.endsWith('@coach.com')
+      );
+
+      // For demo, we'll also look up the role in Firestore
+      db.collection('users').doc(uid).get()
+        .then(doc => {
+          let userIsInstructor = isInstructor;
+
+          // If user document exists, check if they're marked as an instructor
+          if (doc.exists) {
+            const userData = doc.data();
+            if (userData.role === 'instructor') {
+              userIsInstructor = true;
+            }
+          } else {
+            // Create user document if it doesn't exist
+            db.collection('users').doc(uid).set({
+              email: currentUser.email,
+              displayName: currentUser.displayName,
+              role: isInstructor ? 'instructor' : 'student',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(error => {
+              console.error("Error creating user document:", error);
+            });
+          }
+
+          // Show instructor controls if the user is an instructor
+          if (userIsInstructor) {
+            showInstructorControls();
+          }
+        })
+        .catch(error => {
+          console.error("Error checking instructor role:", error);
+
+          // For demo purposes: if Firestore fails, check email as fallback
+          if (isInstructor) {
+            showInstructorControls();
+          }
+        });
+
+      // For testing purposes: Always enable instructor controls for development
+      if (uid === 'test-instructor-id' || window.location.hostname === 'localhost') {
+        showInstructorControls();
+      }
+    }
+
+    // Show instructor controls and attach event listeners
+    function showInstructorControls() {
+      // Show the instructor controls section
+      const instructorControls = document.getElementById('instructor-controls');
+      instructorControls.style.display = 'block';
+
+      // Add event listener to upload button
+      document.getElementById('upload-btn').addEventListener('click', () => {
+        showUploadModal();
+      });
+
+      console.log("Instructor controls enabled");
+    }
+
+    // Show upload modal
+    function showUploadModal() {
+      const modal = document.getElementById('upload-modal');
+      const form = document.getElementById('upload-form');
+      const dateInput = document.getElementById('video-date');
+      const closeButton = document.getElementById('close-upload-modal');
+      const addMoreButton = document.getElementById('add-more-btn');
+
+      // Set today's date as default
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      dateInput.value = formattedDate;
+
+      // Show modal
+      modal.style.display = 'block';
+
+      // Close button functionality
+      closeButton.onclick = () => {
+        modal.style.display = 'none';
+        form.reset();
+        document.getElementById('upload-items').innerHTML = '';
+      };
+
+      // Close when clicking outside the modal content
+      modal.onclick = (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+          form.reset();
+          document.getElementById('upload-items').innerHTML = '';
+        }
+      };
+
+      // Initialize file uploads
+      const fileInput = document.getElementById('video-upload');
+      fileInput.onchange = () => {
+        // Preview selected files - nothing needed for this simple implementation
+        console.log(`Selected ${fileInput.files.length} files`);
+      };
+
+      // Add more videos button
+      addMoreButton.onclick = () => {
+        // Save current form data
+        const currentData = {
+          title: document.getElementById('video-title').value,
+          description: document.getElementById('video-description').value,
+          duration: document.getElementById('video-duration').value,
+          date: document.getElementById('video-date').value,
+          files: fileInput.files
+        };
+
+        if (currentData.title && currentData.description && currentData.duration) {
+          // Add to upload items
+          addUploadItem(currentData);
+
+          // Clear form for next video
+          document.getElementById('video-title').value = '';
+          document.getElementById('video-description').value = '';
+          document.getElementById('video-duration').value = '';
+          fileInput.value = '';
+        } else {
+          alert('Please fill out all required fields before adding another video.');
+        }
+      };
+
+      // Form submission
+      form.onsubmit = (e) => {
+        e.preventDefault();
+
+        // Get current form data
+        const currentData = {
+          title: document.getElementById('video-title').value,
+          description: document.getElementById('video-description').value,
+          duration: document.getElementById('video-duration').value,
+          date: document.getElementById('video-date').value,
+          files: fileInput.files
+        };
+
+        // Add to upload items if form is filled out
+        if (currentData.title && currentData.description && currentData.duration && fileInput.files.length > 0) {
+          addUploadItem(currentData);
+        }
+
+        // Get all items to upload
+        const uploadItems = document.querySelectorAll('.upload-item');
+        if (uploadItems.length === 0 && (fileInput.files.length === 0 || !currentData.title)) {
+          alert('Please add at least one video to upload.');
+          return;
+        }
+
+        // Show simulated progress
+        uploadItems.forEach((item, index) => {
+          const progressBar = item.querySelector('.upload-progress-bar');
+          simulateUploadProgress(progressBar, index);
+        });
+
+        // Simulate a successful upload after a delay
+        setTimeout(() => {
+          alert('All videos uploaded successfully! They will be processed and available soon.');
+          modal.style.display = 'none';
+          form.reset();
+          document.getElementById('upload-items').innerHTML = '';
+
+          // Refresh the videos for the current date
+          const selectedDay = document.querySelector('.day.selected');
+          if (selectedDay) {
+            selectedDay.click();
+          } else {
+            loadVideosForDate(new Date());
+          }
+        }, 3000);
+      };
+    }
+
+    // Add an upload item to the list
+    function addUploadItem(data) {
+      const uploadItemsContainer = document.getElementById('upload-items');
+
+      const item = document.createElement('div');
+      item.classList.add('upload-item');
+
+      let fileNames = '';
+      if (data.files && data.files.length > 0) {
+        const fileList = Array.from(data.files).map(file => file.name).join(', ');
+        fileNames = `<div>Files: ${fileList}</div>`;
+      }
+
+      item.innerHTML = `
+        <div class="upload-item-title">${data.title}</div>
+        <div>${data.description}</div>
+        <div>Duration: ${data.duration}</div>
+        <div>Date: ${new Date(data.date).toLocaleDateString()}</div>
+        ${fileNames}
+        <div class="upload-progress">
+          <div class="upload-progress-bar"></div>
+        </div>
+      `;
+
+      uploadItemsContainer.appendChild(item);
+    }
+
+    // Simulate progress for the upload
+    function simulateUploadProgress(progressBar, delay = 0) {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 5;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+        }
+        progressBar.style.width = `${progress}%`;
+      }, 200);
+    }
+
+    // Video player modal functionality
+    function openVideoPlayer(title, videoUrl) {
+      const modal = document.getElementById('video-modal');
+      const videoPlayer = document.getElementById('video-player');
+      const modalTitle = document.getElementById('modal-video-title');
+
+      // Set video title and source
+      modalTitle.textContent = title;
+      videoPlayer.src = videoUrl;
+
+      // Show modal
+      modal.style.display = 'flex';
+
+      // Close button functionality
+      document.getElementById('close-modal').onclick = () => {
+        modal.style.display = 'none';
+        videoPlayer.src = '';
+      };
+
+      // Close when clicking outside the player
+      modal.onclick = (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+          videoPlayer.src = '';
+        }
+      };
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bristol BJJ Academy - Profile</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      color: #222;
+      padding-bottom: 120px; /* Space for fixed bottom navigation and logout button */
+    }
+
+    .header {
+      background-color: #000;
+      padding: 15px 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        padding: 10px 0;
+      }
+
+      .logo {
+        max-width: 120px;
+      }
+
+      .user-name {
+        display: none;
+      }
+
+      .logout-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+
+    .logo-container {
+      flex: 1;
+      text-align: center;
+    }
+
+    .logo {
+      max-width: 150px;
+      height: auto;
+    }
+
+    .user-controls {
+      padding-right: 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+    }
+
+    .user-name {
+      margin-right: 15px;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #cc0000;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+    }
+
+    .content-area {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 20px;
+    }
+
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: #f5f5f5;
+      margin-right: 30px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: #aaa;
+      border: 3px solid #eee;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-info {
+      flex: 1;
+    }
+
+    .profile-name {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .profile-email {
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .profile-details {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .profile-detail {
+      margin-right: 20px;
+      padding: 5px 0;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      font-weight: bold;
+    }
+
+    .profile-section {
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 480px) {
+      .stats-container {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat-box {
+        padding: 15px 10px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .stat-label {
+        font-size: 12px;
+      }
+    }
+
+    .stat-box {
+      background-color: #f8f8f8;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #cc0000;
+      margin: 10px 0;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    button.update-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    button.update-btn:hover {
+      background-color: #aa0000;
+    }
+
+    .recent-activity {
+      margin-top: 30px;
+    }
+
+    .activity-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .activity-item {
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+    }
+
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 18px;
+    }
+
+    .activity-icon.video {
+      background-color: #ffebee;
+      color: #cc0000;
+    }
+
+    .activity-icon.progress {
+      background-color: #e0f2f1;
+      color: #009688;
+    }
+
+    .activity-content {
+      flex: 1;
+    }
+
+    .activity-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .activity-time {
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* Bottom tabs */
+    .bottom-tabs {
+      display: flex;
+      background-color: rgba(34, 34, 34, 0.95);
+      overflow: hidden;
+      margin-bottom: 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      padding: 8px 0;
+    }
+
+    .bottom-tab {
+      flex: 1;
+      padding: 12px 0;
+      margin: 0 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+      border-radius: 15px;
+    }
+
+    .bottom-tab:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-icon {
+      display: block;
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    .bottom-tab.active {
+      background-color: #cc0000;
+      box-shadow: 0 4px 10px rgba(204, 0, 0, 0.4);
+    }
+
+    /* Favorite Videos Section */
+    .favorites-container {
+      margin-bottom: 30px;
+    }
+
+    .favorite-videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .favorite-videos {
+        grid-template-columns: 1fr;
+      }
+
+      .video-meta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .video-meta span {
+        margin-bottom: 5px;
+      }
+
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-avatar {
+        margin: 0 auto 20px;
+      }
+
+      .profile-details {
+        justify-content: center;
+      }
+    }
+
+    .video-card {
+      background-color: #f8f8f8;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .video-thumbnail {
+      width: 100%;
+      height: 180px;
+      background-color: #333;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .play-icon {
+      position: absolute;
+      background-color: rgba(204, 0, 0, 0.8);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .video-info {
+      padding: 15px;
+    }
+
+    .video-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .video-description {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .video-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .see-more-container {
+      text-align: center;
+    }
+
+    .see-more-btn {
+      background-color: #f0f0f0;
+      color: #555;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .see-more-btn:hover {
+      background-color: #e0e0e0;
+      color: #222;
+    }
+
+    .no-favorites {
+      text-align: center;
+      padding: 30px;
+      background-color: #f8f8f8;
+      border-radius: 8px;
+      color: #666;
+      font-style: italic;
+      grid-column: 1 / -1;
+    }
+
+    /* Video modal */
+    .video-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .video-player-container {
+      width: 90%;
+      max-width: 800px;
+      position: relative;
+    }
+
+    .video-player {
+      width: 100%;
+      height: 450px;
+      border: none;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 480px) {
+      .video-player {
+        height: 240px;
+      }
+
+      .video-player-title {
+        font-size: 16px;
+        padding: 0 10px;
+      }
+    }
+
+    .close-modal {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: white;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .video-player-title {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 20px;
+      max-width: 800px;
+      text-align: center;
+    }
+
+    .bottom-logout-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      margin: 20px auto;
+      display: block;
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <!-- Logo Image -->
+      <img src="logo.png" alt="Bristol Jiu Jitsu" class="logo">
+    </div>
+
+    <div class="user-controls">
+      <div id="user-name" class="user-name"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="authenticated-content">
+      <h1>Profile</h1>
+
+      <div class="content-area">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <div id="avatar-placeholder">?</div>
+          </div>
+
+          <div class="profile-info">
+            <div id="profile-name" class="profile-name">Loading...</div>
+            <div id="profile-email" class="profile-email">Loading...</div>
+
+            <div class="profile-details">
+              <div class="profile-detail">
+                <div class="detail-label">Rank</div>
+                <div class="detail-value" id="profile-rank">White Belt</div>
+              </div>
+
+              <div class="profile-detail">
+                <div class="detail-label">Member Since</div>
+                <div class="detail-value" id="profile-member-since">2023</div>
+              </div>
+
+              <div class="profile-detail">
+                <div class="detail-label">Weight Class</div>
+                <div class="detail-value" id="profile-weight-class">Middleweight</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="section-title">Training Statistics</div>
+
+          <div class="stats-container">
+            <div class="stat-box">
+              <div class="stat-value" id="videos-watched">0</div>
+              <div class="stat-label">Videos Watched</div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-value" id="training-hours">0</div>
+              <div class="stat-label">Training Hours</div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-value" id="streak-days">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-value" id="monthly-sessions">0</div>
+              <div class="stat-label">Classes This Month</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="section-title">Profile Settings</div>
+
+          <div class="form-group">
+            <label for="display-name">Display Name</label>
+            <input type="text" id="display-name" placeholder="Your name">
+          </div>
+
+          <div class="form-group">
+            <label for="belt-rank">Belt Rank</label>
+            <select id="belt-rank">
+              <option value="white">White Belt</option>
+              <option value="blue">Blue Belt</option>
+              <option value="purple">Purple Belt</option>
+              <option value="brown">Brown Belt</option>
+              <option value="black">Black Belt</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="weight-class">Weight Class</label>
+            <select id="weight-class">
+              <option value="rooster">Rooster (57.5 kg)</option>
+              <option value="light-feather">Light-Feather (64 kg)</option>
+              <option value="feather">Feather (70 kg)</option>
+              <option value="light">Light (76 kg)</option>
+              <option value="middle">Middle (82.3 kg)</option>
+              <option value="medium-heavy">Medium-Heavy (88.3 kg)</option>
+              <option value="heavy">Heavy (94.3 kg)</option>
+              <option value="super-heavy">Super-Heavy (100.5 kg)</option>
+              <option value="ultra-heavy">Ultra-Heavy (100.5+ kg)</option>
+            </select>
+          </div>
+
+          <button class="update-btn" id="update-profile-btn">Update Profile</button>
+        </div>
+
+        <div class="profile-section">
+          <div class="section-title">Favorited Videos</div>
+
+          <div class="favorites-container">
+            <div id="favorite-videos-container" class="favorite-videos">
+              <!-- Favorited videos will be added here dynamically -->
+              <div class="no-favorites" id="no-favorites-message">
+                No favorited videos yet. Go to the Train tab and favorite some videos!
+              </div>
+            </div>
+
+            <div class="see-more-container">
+              <button id="see-more-btn" class="see-more-btn">See All Favorited Videos</button>
+            </div>
+          </div>
+        </div>
+        <button id="logout-btn" class="bottom-logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video player modal -->
+  <div id="video-modal" class="video-modal">
+    <div class="video-player-title" id="modal-video-title"></div>
+    <div class="video-player-container">
+      <button id="close-modal" class="close-modal">×</button>
+      <iframe id="video-player" class="video-player" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <div class="bottom-tabs">
+    <div class="bottom-tab" data-page="home.html">
+      <span class="tab-icon">🏠</span>
+      Home
+    </div>
+    <div class="bottom-tab" data-page="study.html">
+      <span class="tab-icon">🥋</span>
+      Train
+    </div>
+    <div class="bottom-tab active" data-page="profile.html">
+      <span class="tab-icon">👤</span>
+      Profile
+    </div>
+  </div>
+
+  <script>
+    // Play favorite video in modal
+    function playFavoriteVideo(title, videoUrl) {
+      // Set the video title and source
+      document.getElementById('modal-video-title').textContent = title;
+      document.getElementById('video-player').src = videoUrl;
+
+      // Show the modal
+      const modal = document.getElementById('video-modal');
+      modal.style.display = 'flex';
+
+      // Record activity in Firestore if user is logged in
+      const user = firebase.auth().currentUser;
+      if (user) {
+        const db = firebase.firestore();
+        const activityData = {
+          type: 'video',
+          title: `Watched "${title}"`,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Add to recent activity array and increment videos watched
+        db.collection('users').doc(user.uid).update({
+          recentActivity: firebase.firestore.FieldValue.arrayUnion(activityData),
+          videosWatched: firebase.firestore.FieldValue.increment(1)
+        }).catch(error => {
+          console.error('Error recording activity:', error);
+        });
+      }
+    }
+
+    // Close video modal
+    function closeVideoModal() {
+      const modal = document.getElementById('video-modal');
+      const videoPlayer = document.getElementById('video-player');
+
+      // Stop video playback by clearing the src
+      videoPlayer.src = '';
+      modal.style.display = 'none';
+    }
+
+    // Fetch Firebase configuration from server
+    function initializeFirebase() {
+      return fetch('/firebase-config')
+        .then(response => response.json())
+        .then(firebaseConfig => {
+          // Initialize Firebase
+          firebase.initializeApp(firebaseConfig);
+          return firebase;
+        })
+        .catch(error => {
+          console.error("Error initializing Firebase:", error);
+        });
+    }
+
+    // Load user data from Firestore
+    function loadUserData(uid) {
+      const db = firebase.firestore();
+      return db.collection('users').doc(uid).get()
+        .then(doc => {
+          if (doc.exists) {
+            return doc.data();
+          } else {
+            // No user document yet, create one with default values
+            const defaultData = {
+              displayName: document.getElementById('profile-name').textContent,
+              email: document.getElementById('profile-email').textContent,
+              videosWatched: 0,
+              trainingHours: 0,
+              streak: 0,
+              monthlySessions: 0,
+              rank: 'white',
+              weightClass: 'middle',
+              memberSince: new Date().getFullYear(),
+              lastActive: new Date(),
+              recentActivity: [],
+              favoritedVideos: [] // Add favoritedVideos field
+            };
+
+            // Store default data in Firestore
+            return db.collection('users').doc(uid).set(defaultData)
+              .then(() => defaultData)
+              .catch(error => {
+                console.error("Error creating user data:", error);
+                return defaultData;
+              });
+          }
+        })
+        .catch(error => {
+          console.error("Error getting user data:", error);
+          // Return default data on error
+          return {
+            displayName: document.getElementById('profile-name').textContent,
+            email: document.getElementById('profile-email').textContent,
+            videosWatched: 0,
+            trainingHours: 0,
+            streak: 0,
+            monthlySessions: 0,
+            rank: 'white',
+            weightClass: 'middle',
+            memberSince: new Date().getFullYear()
+          };
+        });
+    }
+
+    // Update profile UI with user data
+    function updateProfileUI(user, userData) {
+      // Update profile header
+      document.getElementById('profile-name').textContent = userData.displayName || user.displayName || user.email;
+      document.getElementById('profile-email').textContent = user.email;
+
+      // Set avatar (use first letter of name if no photo)
+      const avatarPlaceholder = document.getElementById('avatar-placeholder');
+      if (user.photoURL) {
+        avatarPlaceholder.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName || 'User'}">`;
+      } else {
+        const initial = (userData.displayName || user.displayName || user.email.charAt(0)).charAt(0).toUpperCase();
+        avatarPlaceholder.textContent = initial;
+      }
+
+      // Update profile details
+      const rankDisplay = {
+        'white': 'White Belt',
+        'blue': 'Blue Belt',
+        'purple': 'Purple Belt',
+        'brown': 'Brown Belt',
+        'black': 'Black Belt'
+      };
+
+      const weightClassDisplay = {
+        'rooster': 'Rooster',
+        'light-feather': 'Light-Feather',
+        'feather': 'Feather',
+        'light': 'Light',
+        'middle': 'Middleweight',
+        'medium-heavy': 'Medium-Heavy',
+        'heavy': 'Heavyweight',
+        'super-heavy': 'Super-Heavy',
+        'ultra-heavy': 'Ultra-Heavy'
+      };
+
+      document.getElementById('profile-rank').textContent = rankDisplay[userData.rank] || 'White Belt';
+      document.getElementById('profile-member-since').textContent = userData.memberSince || new Date().getFullYear();
+      document.getElementById('profile-weight-class').textContent = weightClassDisplay[userData.weightClass] || 'Middleweight';
+
+      // Update statistics
+      document.getElementById('videos-watched').textContent = userData.videosWatched || 0;
+      document.getElementById('training-hours').textContent = userData.trainingHours || 0;
+      document.getElementById('streak-days').textContent = userData.streak || 0;
+      document.getElementById('monthly-sessions').textContent = userData.monthlySessions || 0;
+
+      // Set form values
+      document.getElementById('display-name').value = userData.displayName || user.displayName || '';
+      document.getElementById('belt-rank').value = userData.rank || 'white';
+      document.getElementById('weight-class').value = userData.weightClass || 'middle';
+
+      // Update activity list (if data exists)
+      if (userData.recentActivity && userData.recentActivity.length > 0) {
+        const activityList = document.getElementById('activity-list');
+        activityList.innerHTML = '';
+
+        userData.recentActivity.forEach(activity => {
+          const listItem = document.createElement('li');
+          listItem.classList.add('activity-item');
+
+          const iconDiv = document.createElement('div');
+          iconDiv.classList.add('activity-icon');
+          iconDiv.classList.add(activity.type);
+          iconDiv.textContent = activity.type === 'video' ? '📹' : '📊';
+
+          const contentDiv = document.createElement('div');
+          contentDiv.classList.add('activity-content');
+
+          const titleDiv = document.createElement('div');
+          titleDiv.classList.add('activity-title');
+          titleDiv.textContent = activity.title;
+
+          const timeDiv = document.createElement('div');
+          timeDiv.classList.add('activity-time');
+
+          // Format activity time
+          const activityDate = activity.timestamp ? new Date(activity.timestamp.seconds * 1000) : new Date();
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+
+          if (activityDate.toDateString() === today.toDateString()) {
+            timeDiv.textContent = `Today at ${activityDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+          } else if (activityDate.toDateString() === yesterday.toDateString()) {
+            timeDiv.textContent = `Yesterday at ${activityDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+          } else {
+            timeDiv.textContent = activityDate.toLocaleDateString();
+          }
+
+          contentDiv.appendChild(titleDiv);
+          contentDiv.appendChild(timeDiv);
+
+          listItem.appendChild(iconDiv);
+          listItem.appendChild(contentDiv);
+
+          activityList.appendChild(listItem);
+        });
+      }
+      updateFavoritesInProfile(userData.favoritedVideos); //added line to update favorites on load
+    }
+
+    // Function to update favorites section
+    function updateFavoritesInProfile(favoritedVideoIds) {
+      // This function will be called from study.html when videos are favorited/unfavorited
+      const favoritesContainer = document.getElementById('favorite-videos-container');
+      const noFavoritesMessage = document.getElementById('no-favorites-message');
+      const seeMoreBtn = document.getElementById('see-more-btn');
+
+      console.log("Updating favorites in profile:", favoritedVideoIds);
+
+      if (!favoritedVideoIds || favoritedVideoIds.length === 0) {
+        noFavoritesMessage.style.display = 'block';
+        seeMoreBtn.style.display = 'none';
+        return;
+      }
+
+      // Hide no favorites message
+      noFavoritesMessage.style.display = 'none';
+
+      // Show or hide See More button based on number of favorites
+      seeMoreBtn.style.display = favoritedVideoIds.length > 3 ? 'block' : 'none';
+
+      // Store the full list of favorited videos for the "See All" button
+      window.allFavoritedVideoIds = favoritedVideoIds;
+
+      // Make sure to expose this function globally so it can be called from study.html
+      window.updateFavoritesInProfile = updateFavoritesInProfile;
+
+      // Clear existing favorites (except the no-favorites message)
+      const existingCards = favoritesContainer.querySelectorAll('.video-card');
+      existingCards.forEach(card => card.remove());
+
+      // Video data lookup (same as in study.html)
+      const allVideos = {
+        // Fixed videos for specific dates
+        'v1': { id: 'v1', title: 'Fundamental Guard Passes', description: 'Learn the most essential guard passing techniques every white belt should know', duration: '14:30', instructor: 'John Doe', difficulty: 'Beginner', bgColor: '#1a3d5c' },
+        'v2': { id: 'v2', title: 'Triangle Choke Setups', description: 'Three effective ways to set up the triangle choke from guard', duration: '11:20', instructor: 'Sarah Smith', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+        'v3': { id: 'v3', title: 'Advanced De La Riva Guard', description: 'How to control and sweep from the De La Riva guard position', duration: '18:45', instructor: 'Mike Johnson', difficulty: 'Advanced', bgColor: '#5c1a1a' },
+        'v4': { id: 'v4', title: 'Competition Training Drills', description: 'High-intensity training drills to prepare for tournament conditions', duration: '22:15', instructor: 'Emily White', difficulty: 'All Levels', bgColor: '#1a5c3d' },
+        'v5': { id: 'v5', title: 'Escaping Side Control', description: 'Practical techniques to escape from side control against a larger opponent', duration: '15:30', instructor: 'John Doe', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+        'v6': { id: 'v6', title: 'Takedown Fundamentals', description: 'Basic takedown techniques effective for BJJ competitions', duration: '20:10', instructor: 'Sarah Smith', difficulty: 'Beginner', bgColor: '#1a3d5c' },
+        'v7': { id: 'v7', title: 'Kimura from Closed Guard', description: 'Multiple setups for the kimura submission from closed guard', duration: '13:25', instructor: 'Mike Johnson', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+        'v8': { id: 'v8', title: 'Pressure Passing Concepts', description: 'Understanding and applying pressure in your guard passing game', duration: '19:40', instructor: 'Emily White', difficulty: 'Advanced', bgColor: '#5c1a1a' },
+        'v9': { id: 'v9', title: 'Half Guard Sweeps', description: 'Essential sweeps from the half guard position', duration: '16:55', instructor: 'John Doe', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+        'v10': { id: 'v10', title: 'Berimbolo Technique', description: 'Detailed breakdown of the berimbolo technique and its variations', duration: '24:30', instructor: 'Sarah Smith', difficulty: 'Advanced', bgColor: '#5c1a1a' },
+        'v11': { id: 'v11', title: 'Self-Defense Basics', description: 'Practical self-defense applications of BJJ techniques', duration: '17:15', instructor: 'Mike Johnson', difficulty: 'Beginner', bgColor: '#1a3d5c' },
+        'v12': { id: 'v12', title: 'Open Guard Retention', description: 'How to maintain your open guard against aggressive passers', duration: '15:50', instructor: 'Emily White', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+        'v13': { id: 'v13', title: 'BJJ Fundamentals', description: 'Core techniques every practitioner should master', duration: '16:40', instructor: 'John Doe', difficulty: 'All Levels', bgColor: '#1a5c3d' },
+        'v14': { id: 'v14', title: 'Submission Combinations', description: 'How to chain submissions together for higher success rate', duration: '18:20', instructor: 'Sarah Smith', difficulty: 'Intermediate', bgColor: '#3a1a5c' }
+      };
+
+      // Add favorite videos (limited to 3 initially)
+      favoritedVideoIds.slice(0, 3).forEach(videoId => {
+        if (!allVideos[videoId]) return;
+
+        const video = allVideos[videoId];
+
+        // Create video card
+        const videoCard = document.createElement('div');
+        videoCard.classList.add('video-card');
+        videoCard.onclick = function() {
+          playFavoriteVideo(video.title, 'https://www.youtube.com/embed/QH5YuD8BIy0');
+        };
+
+        // Create video thumbnail
+        const thumbnail = document.createElement('div');
+        thumbnail.classList.add('video-thumbnail');
+        thumbnail.style.backgroundColor = video.bgColor || '#2a2a2a';
+
+        // Play icon
+        const playIcon = document.createElement('div');
+        playIcon.classList.add('play-icon');
+        playIcon.innerHTML = '▶';
+        thumbnail.appendChild(playIcon);
+
+        // Video info
+        const videoInfo = document.createElement('div');
+        videoInfo.classList.add('video-info');
+
+        const videoTitle = document.createElement('div');
+        videoTitle.classList.add('video-title');
+        videoTitle.textContent = video.title;
+
+        const videoDescription = document.createElement('div');
+        videoDescription.classList.add('video-description');
+        videoDescription.textContent = video.description;
+
+        const videoMeta = document.createElement('div');
+        videoMeta.classList.add('video-meta');
+        videoMeta.innerHTML = `<span>${video.duration}</span><span>Instructor: ${video.instructor}</span>`;
+
+        videoInfo.appendChild(videoTitle);
+        videoInfo.appendChild(videoDescription);
+        videoInfo.appendChild(videoMeta);
+
+        videoCard.appendChild(thumbnail);
+        videoCard.appendChild(videoInfo);
+
+        favoritesContainer.appendChild(videoCard);
+      });
+
+      // Update count in completed stats
+      document.getElementById('videos-watched').textContent = window.completedVideos ? window.completedVideos.length : '0';
+    }
+
+    // Function to display all favorites or switch back to showing only 3
+    function showAllFavorites() {
+      if (!window.allFavoritedVideoIds || window.allFavoritedVideoIds.length === 0) return;
+
+      const seeMoreBtn = document.getElementById('see-more-btn');
+      const favoritesContainer = document.getElementById('favorite-videos-container');
+
+      // If button says "See All", show all videos, otherwise show only 3
+      if (seeMoreBtn.textContent === 'See All Favorited Videos') {
+        // Show all videos - change button text
+        seeMoreBtn.textContent = 'Show Less';
+
+        // Video data lookup
+        const allVideos = {
+          // Fixed videos for specific dates
+          'v1': { id: 'v1', title: 'Fundamental Guard Passes', description: 'Learn the most essential guard passing techniques every white belt should know', duration: '14:30', instructor: 'John Doe', difficulty: 'Beginner', bgColor: '#1a3d5c' },
+          'v2': { id: 'v2', title: 'Triangle Choke Setups', description: 'Three effective ways to set up the triangle choke from guard', duration: '11:20', instructor: 'Sarah Smith', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+          'v3': { id: 'v3', title: 'Advanced De La Riva Guard', description: 'How to control and sweep from the De La Riva guard position', duration: '18:45', instructor: 'Mike Johnson', difficulty: 'Advanced', bgColor: '#5c1a1a' },
+          'v4': { id: 'v4', title: 'Competition Training Drills', description: 'High-intensity training drills to prepare for tournament conditions', duration: '22:15', instructor: 'Emily White', difficulty: 'All Levels', bgColor: '#1a5c3d' },
+          'v5': { id: 'v5', title: 'Escaping Side Control', description: 'Practical techniques to escape from side control against a larger opponent', duration: '15:30', instructor: 'John Doe', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+          'v6': { id: 'v6', title: 'Takedown Fundamentals', description: 'Basic takedown techniques effective for BJJ competitions', duration: '20:10', instructor: 'Sarah Smith', difficulty: 'Beginner', bgColor: '#1a3d5c' },
+          'v7': { id: 'v7', title: 'Kimura from Closed Guard', description: 'Multiple setups for the kimura submission from closed guard', duration: '13:25', instructor: 'Mike Johnson', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+          'v8': { id: 'v8', title: 'Pressure Passing Concepts', description: 'Understanding and applying pressure in your guard passing game', duration: '19:40', instructor: 'Emily White', difficulty: 'Advanced', bgColor: '#5c1a1a' },
+          'v9': { id: 'v9', title: 'Half Guard Sweeps', description: 'Essential sweeps from the half guard position', duration: '16:55', instructor: 'John Doe', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+          'v10': { id: 'v10', title: 'Berimbolo Technique', description: 'Detailed breakdown of the berimbolo technique and its variations', duration: '24:30', instructor: 'Sarah Smith', difficulty: 'Advanced', bgColor: '#5c1a1a' },
+          'v11': { id: 'v11', title: 'Self-Defense Basics', description: 'Practical self-defense applications of BJJ techniques', duration: '17:15', instructor: 'Mike Johnson', difficulty: 'Beginner', bgColor: '#1a3d5c' },
+          'v12': { id: 'v12', title: 'Open Guard Retention', description: 'How to maintain your open guard against aggressive passers', duration: '15:50', instructor: 'Emily White', difficulty: 'Intermediate', bgColor: '#3a1a5c' },
+          'v13': { id: 'v13', title: 'BJJ Fundamentals', description: 'Core techniques every practitioner should master', duration: '16:40', instructor: 'John Doe', difficulty: 'All Levels', bgColor: '#1a5c3d' },
+          'v14': { id: 'v14', title: 'Submission Combinations', description: 'How to chain submissions together for higher success rate', duration: '18:20', instructor: 'Sarah Smith', difficulty: 'Intermediate', bgColor: '#3a1a5c' }
+        };
+
+        // Clear existing videos
+        const existingCards = favoritesContainer.querySelectorAll('.video-card');
+        existingCards.forEach(card => card.remove());
+
+        // Display all favorited videos
+        window.allFavoritedVideoIds.forEach(videoId => {
+          if (!allVideos[videoId]) return;
+
+          const video = allVideos[videoId];
+
+          // Create video card
+          const videoCard = document.createElement('div');
+          videoCard.classList.add('video-card');
+          videoCard.onclick = function() {
+            playFavoriteVideo(video.title, 'https://www.youtube.com/embed/QH5YuD8BIy0');
+          };
+
+          // Create video thumbnail
+          const thumbnail = document.createElement('div');
+          thumbnail.classList.add('video-thumbnail');
+          thumbnail.style.backgroundColor = video.bgColor || '#2a2a2a';
+
+          // Play icon
+          const playIcon = document.createElement('div');
+          playIcon.classList.add('play-icon');
+          playIcon.innerHTML = '▶';
+          thumbnail.appendChild(playIcon);
+
+          // Video info
+          const videoInfo = document.createElement('div');
+          videoInfo.classList.add('video-info');
+
+          const videoTitle = document.createElement('div');
+          videoTitle.classList.add('video-title');
+          videoTitle.textContent = video.title;
+
+          const videoDescription = document.createElement('div');
+          videoDescription.classList.add('video-description');
+          videoDescription.textContent = video.description;
+
+          const videoMeta = document.createElement('div');
+          videoMeta.classList.add('video-meta');
+          videoMeta.innerHTML = `<span>${video.duration}</span><span>Instructor: ${video.instructor}</span>`;
+
+          videoInfo.appendChild(videoTitle);
+          videoInfo.appendChild(videoDescription);
+          videoInfo.appendChild(videoMeta);
+
+          videoCard.appendChild(thumbnail);
+          videoCard.appendChild(videoInfo);
+
+          favoritesContainer.appendChild(videoCard);
+        });
+      } else {
+        // Change back to "See All" and show only first 3 videos
+        seeMoreBtn.textContent = 'See All Favorited Videos';
+        updateFavoritesInProfile(window.allFavoritedVideoIds);
+      }
+    }
+
+    // Function to update favorites display
+    function updateFavoritesDisplay(favoritedVideoIds) {
+      updateFavoritesInProfile(favoritedVideoIds);
+    }
+
+    // Document loaded event
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set up event listener for See More button
+      document.getElementById('see-more-btn').addEventListener('click', showAllFavorites);
+
+      // Set up event listener for close button in video modal
+      document.getElementById('close-modal').addEventListener('click', closeVideoModal);
+
+      initializeFirebase()
+        .then(firebase => {
+          // Check authentication state
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              // User is signed in
+              console.log('User signed in:', user);
+
+              // Display user name in header
+              const userNameElement = document.getElementById('user-name');
+              userNameElement.textContent = user.displayName || user.email;
+
+              // Load user data from Firestore
+              loadUserData(user.uid)
+                .then(userData => {
+                  updateProfileUI(user, userData);
+
+                  // Setup profile update handler
+                  document.getElementById('update-profile-btn').addEventListener('click', () => {
+                    const updatedData = {
+                      displayName: document.getElementById('display-name').value,
+                      rank: document.getElementById('belt-rank').value,
+                      weightClass: document.getElementById('weight-class').value,
+                      lastUpdated: new Date()
+                    };
+
+                    const db = firebase.firestore();
+                    db.collection('users').doc(user.uid).update(updatedData)
+                      .then(() => {
+                        // Reload user data after update
+                        return loadUserData(user.uid);
+                      })
+                      .then(freshData => {
+                        updateProfileUI(user, freshData);
+                        alert('Profile updated successfully!');
+                      })
+                      .catch(error => {
+                        console.error('Error updating profile:', error);
+                        alert('Failed to update profile. Please try again.');
+                      });
+                  });
+                });
+
+              // Set up logout functionality
+              const logoutBtn = document.getElementById('logout-btn');
+              logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                  // Sign-out successful, redirect to login
+                  window.location.href = 'login.html';
+                }).catch(error => {
+                  console.error('Logout error:', error);
+                });
+              });
+            } else {
+              // No user is signed in, redirect to login
+              window.location.href = 'login.html';
+            }
+          });
+
+          // Set up bottom navigation
+          const tabs = document.querySelectorAll('.bottom-tab');
+          tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+              const page = tab.getAttribute('data-page');
+              if (page) {
+                window.location.href = page;
+              }
+            });
+          });
+        });
+    });
+  </script>
+</body>
+</html>
